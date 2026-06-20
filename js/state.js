@@ -1,69 +1,70 @@
+// ═══════════════════════════════════════
+// ESTADO GLOBAL
+// ═══════════════════════════════════════
+
 const appState = {
-  // Datos del usuario
-  nombreNorm: null,
-  nombre: null,
+  // Usuario
+  nombreNorm:     "",
+  nombre:         "",
 
-  // Progreso de spins
+  // Ruleta
+  resultado:      "",
   spinsRestantes: 0,
+  testMode:       false,
 
-  // Resultado actual de la ruleta
-  resultado: null,
-
-  // Reserva
-  fechaISO: null,
-  fechaTexto: null,
-  horaTexto: null,
+  // Agenda
+  fechaISO:       "",
+  fechaTexto:     "",
+  horaTexto:      "",
 
   // Sellos
-  sellosHoy: false,
-  stampsEnCiclo: 0,
-  totalStamps: 0,
-  ultimoSello: null,
+  sellosHoy:      false,
+  stampsEnCiclo:  0,
+  totalStamps:    0,
+  ultimoSello:    "",
 
   // Navegación
-  pantallaActual: "login",
-
-  // Modo pruebas (se activa si URL tiene ?test=1 y TEST_MODE_ENABLED es true)
-  testMode: false
+  pantallaActual: "login"
 };
 
-// --- Getters ---
+// ═══════════════════════════════════════
+// GETTERS / SETTERS GENÉRICOS
+// ═══════════════════════════════════════
+
 function getState(key) {
   return appState[key];
 }
 
-function isTestMode() {
-  return appState.testMode;
-}
-
-function hasValidResult() {
-  return (
-    appState.resultado !== null &&
-    !CONFIG.INVALID_BOOKING_RESULTS.includes(appState.resultado)
-  );
-}
-
-function canSpin() {
-  return appState.spinsRestantes > 0;
-}
-
-// --- Setters ---
 function setState(key, value) {
   appState[key] = value;
 }
 
+// ═══════════════════════════════════════
+// SETTERS SEMÁNTICOS
+// ═══════════════════════════════════════
+
 function setUserFromProgress(data) {
-  appState.nombre         = data.nombre;
-  appState.nombreNorm     = data.nombreNorm;
-  appState.spinsRestantes = data.spinsRestantes;
-  appState.sellosHoy      = data.sellosHoy;
-  appState.stampsEnCiclo  = data.stampsEnCiclo;
-  appState.totalStamps    = data.totalStamps;
-  appState.ultimoSello    = data.ultimoSello;
+  appState.nombreNorm    = data.nombreNorm    || "";
+  appState.nombre        = data.nombre        || "";
+  appState.spinsRestantes= Number(data.spinsRestantes) || 0;
+  appState.sellosHoy     = !!data.sellosHoy;
+  appState.stampsEnCiclo = Number(data.stampsEnCiclo)  || 0;
+  appState.totalStamps   = Number(data.totalStamps)    || 0;
+  appState.ultimoSello   = data.ultimoSello   || "";
 }
 
 function setSpinResult(resultado) {
   appState.resultado = resultado;
+}
+
+function updateSpinsRestantes(n) {
+  appState.spinsRestantes = Number(n) || 0;
+}
+
+function updateStamps(stampsEnCiclo, totalStamps) {
+  appState.stampsEnCiclo = Number(stampsEnCiclo) || 0;
+  appState.totalStamps   = Number(totalStamps)   || 0;
+  appState.sellosHoy     = true; // marcar como sellado hoy
 }
 
 function setBooking(fechaISO, fechaTexto, horaTexto) {
@@ -72,32 +73,49 @@ function setBooking(fechaISO, fechaTexto, horaTexto) {
   appState.horaTexto  = horaTexto;
 }
 
-function updateSpinsRestantes(n) {
-  appState.spinsRestantes = n;
-}
-
-function updateStamps(stampsEnCiclo, totalStamps) {
-  appState.stampsEnCiclo = stampsEnCiclo;
-  appState.totalStamps   = totalStamps;
-  appState.sellosHoy     = true;
-}
-
 function resetSession() {
-  appState.nombreNorm     = null;
-  appState.nombre         = null;
-  appState.spinsRestantes = 0;
-  appState.resultado      = null;
-  appState.fechaISO       = null;
-  appState.fechaTexto     = null;
-  appState.horaTexto      = null;
-  appState.sellosHoy      = false;
-  appState.stampsEnCiclo  = 0;
-  appState.totalStamps    = 0;
-  appState.ultimoSello    = null;
-  appState.pantallaActual = "login";
+  appState.nombreNorm    = "";
+  appState.nombre        = "";
+  appState.resultado     = "";
+  appState.spinsRestantes= 0;
+  appState.fechaISO      = "";
+  appState.fechaTexto    = "";
+  appState.horaTexto     = "";
+  appState.sellosHoy     = false;
+  appState.stampsEnCiclo = 0;
+  appState.totalStamps   = 0;
+  appState.ultimoSello   = "";
+  appState.pantallaActual= "login";
+  // testMode NO se resetea — persiste durante toda la sesión
 }
 
-// Detectar modo pruebas al cargar
+// ═══════════════════════════════════════
+// HELPERS DE LÓGICA
+// ═══════════════════════════════════════
+
+function canSpin() {
+  // En modo pruebas siempre se puede girar
+  if (appState.testMode) return true;
+  return appState.spinsRestantes > 0;
+}
+
+function hasValidResult() {
+  return (
+    appState.resultado &&
+    appState.resultado !== "" &&
+    !CONFIG.NO_COUNT_RESULTS.includes(appState.resultado)
+  );
+}
+
+function isTestMode() {
+  return appState.testMode === true;
+}
+
+// ═══════════════════════════════════════
+// INICIALIZAR testMode desde URL
+// Se ejecuta una sola vez al cargar la página
+// ═══════════════════════════════════════
+
 (function initTestMode() {
   if (!CONFIG.TEST_MODE_ENABLED) {
     appState.testMode = false;
@@ -105,4 +123,11 @@ function resetSession() {
   }
   const params = new URLSearchParams(window.location.search);
   appState.testMode = params.has(CONFIG.TEST_MODE_PARAM);
+
+  if (appState.testMode) {
+    console.info(
+      "%c[Salidas Random] MODO PRUEBAS ACTIVO",
+      "background:#7c3aed;color:#fff;padding:4px 8px;border-radius:4px;font-weight:bold"
+    );
+  }
 })();
