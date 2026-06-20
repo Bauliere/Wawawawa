@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salidas Random 🎰</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/screens.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════
+       PANTALLA 1: LOGIN
+  ════════════════════════════════════════ -->
+  <section id="screen-login" class="screen active">
+    <div class="glass-card login-card">
+      <div class="login-logo">
+        <img src="assets/fausto-icon.png" alt="Salidas Random" class="logo-img" />
+      </div>
+      <h1 class="app-title">Salidas <span class="gold">Random</span></h1>
+      <p class="app-subtitle">¿A dónde vamos hoy?</p>
+
+      <div class="input-group">
+        <label for="input-nombre" class="input-label">¿Quién eres?</label>
+        <input
+          type="text"
+          id="input-nombre"
+          class="glass-input"
+          placeholder="Escribe tu nombre..."
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        />
+        <p id="login-error" class="error-msg hidden"></p>
+      </div>
+
+      <button id="btn-entrar" class="btn-primary" disabled>
+        <span class="btn-text">Entrar</span>
+        <span class="btn-loader hidden">⏳</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       PANTALLA 2: RULETA
+  ════════════════════════════════════════ -->
+  <section id="screen-ruleta" class="screen hidden">
+    <header class="screen-header">
+      <p id="saludo-nombre" class="saludo"></p>
+      <div class="spins-badge">
+        <span id="spins-restantes">1</span>
+        <span class="spins-label"> intento restante</span>
+      </div>
+    </header>
+
+    <div class="wheel-wrapper">
+      <div class="wheel-pointer" aria-hidden="true">▼</div>
+      <canvas id="canvas-ruleta" width="380" height="380"></canvas>
+    </div>
+
+    <button id="btn-girar" class="btn-primary btn-spin">
+      <span class="btn-text">🎰 ¡Girar!</span>
+      <span class="btn-loader hidden">girando...</span>
+    </button>
+
+    <button id="btn-ver-sellos" class="btn-ghost">
+      🏅 Ver mis sellos
+    </button>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       MODAL: RESULTADO DE LA RULETA
+  ════════════════════════════════════════ -->
+  <div id="modal-resultado" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="glass-card modal-card" id="modal-card-resultado">
+
+      <!-- Estado normal -->
+      <div id="resultado-normal">
+        <p class="modal-label">¡Salió!</p>
+        <h2 id="resultado-texto" class="resultado-titulo"></h2>
+        <p id="resultado-descripcion" class="resultado-desc"></p>
+        <div class="modal-actions">
+          <button id="btn-agendar" class="btn-primary hidden">📅 Agendar</button>
+          <button id="btn-otro-intento" class="btn-ghost hidden">🔄 Volver a girar</button>
+        </div>
+      </div>
+
+      <!-- Estado especial: Sorpresa -->
+      <div id="resultado-sorpresa" class="hidden">
+        <div class="sorpresa-stars" aria-hidden="true"></div>
+        <p class="sorpresa-label">¡¡SORPRESA!!</p>
+        <h2 class="sorpresa-titulo">✨ Sorpresa ✨</h2>
+        <p class="sorpresa-desc">Algo muy especial te espera...</p>
+        <button id="btn-agendar-sorpresa" class="btn-primary btn-sorpresa">💜 Agendar</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       PANTALLA 3: AGENDA
+  ════════════════════════════════════════ -->
+  <section id="screen-agenda" class="screen hidden">
+    <div class="glass-card agenda-card">
+      <button class="btn-back" id="btn-back-agenda" aria-label="Volver">← Volver</button>
+      <h2 class="screen-title">Elige la <span class="gold">fecha</span></h2>
+
+      <div class="resultado-badge" id="agenda-resultado-badge"></div>
+
+      <div class="calendar-wrapper">
+        <div class="calendar-nav">
+          <button id="cal-prev" class="btn-cal-nav" aria-label="Mes anterior">‹</button>
+          <span id="cal-month-label" class="cal-month-label"></span>
+          <button id="cal-next" class="btn-cal-nav" aria-label="Mes siguiente">›</button>
+        </div>
+        <div class="calendar-weekdays">
+          <span>Dom</span><span>Lun</span><span>Mar</span>
+          <span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+      </div>
+
+      <div class="hora-wrapper">
+        <label for="select-hora" class="input-label">
+          Hora tentativa
+          <span class="label-hint">(puede ajustarse)</span>
+        </label>
+        <select id="select-hora" class="glass-select">
+          <option value="">-- Elige una hora --</option>
+        </select>
+      </div>
+
+      <p id="agenda-error" class="error-msg hidden"></p>
+
+      <button id="btn-confirmar-reserva" class="btn-primary" disabled>
+        Confirmar reserva
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       PANTALLA 4: CONFIRMACIÓN
+  ════════════════════════════════════════ -->
+  <section id="screen-confirmacion" class="screen hidden">
+    <div class="glass-card confirmacion-card">
+      <div class="confirmacion-icon">🎉</div>
+      <h2 class="screen-title">¡<span class="gold">Listo!</span></h2>
+      <p class="confirmacion-sub">Tu salida está agendada</p>
+
+      <div class="resumen-reserva">
+        <div class="resumen-row">
+          <span class="resumen-key">Plan</span>
+          <span id="conf-resultado" class="resumen-val"></span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-key">Fecha</span>
+          <span id="conf-fecha" class="resumen-val"></span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-key">Hora</span>
+          <span id="conf-hora" class="resumen-val"></span>
+        </div>
+      </div>
+
+      <div class="confirmacion-actions">
+        <button id="btn-ver-sellos-conf" class="btn-primary">🏅 Ver mis sellos</button>
+        <button id="btn-inicio-conf" class="btn-ghost">🏠 Inicio</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       PANTALLA 5: SELLOS
+  ════════════════════════════════════════ -->
+  <section id="screen-sellos" class="screen hidden">
+    <div class="glass-card sellos-card">
+      <button class="btn-back" id="btn-back-sellos" aria-label="Volver">← Volver</button>
+      <h2 class="screen-title">Mis <span class="gold">Sellos</span></h2>
+
+      <div class="sellos-progreso">
+        <span id="sellos-count" class="sellos-count">0</span>
+        <span class="sellos-total">/ 15</span>
+        <p class="sellos-hint">Completa 15 sellos y gana un intento extra</p>
+      </div>
+
+      <div id="sellos-grid" class="sellos-grid"></div>
+
+      <div id="sellos-bonus-msg" class="bonus-msg hidden">
+        🎊 ¡Completaste 15 sellos! Se agregó un intento extra.
+      </div>
+
+      <button id="btn-sellar-hoy" class="btn-primary">
+        📌 Sellar hoy
+      </button>
+      <p id="sellos-error" class="error-msg hidden"></p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       SCRIPTS (orden importa)
+  ════════════════════════════════════════ -->
+  <script src="js/config.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/wheel.js"></script>
+  <script src="js/booking.js"></script>
+  <script src="js/stamps.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

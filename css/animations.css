@@ -1,0 +1,76 @@
+/* ═══════════════════════════════════════
+   RULETA
+════════════════════════════════════════ */
+@keyframes wheelSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(var(--spin-degrees, 1800deg)); }
+}
+
+/* ═══════════════════════════════════════
+   SORPRESA
+════════════════════════════════════════ */
+@keyframes sorpresaPulse {
+  0%, 100% {
+    box-shadow:
+      0 8px 40px rgba(0,0,0,0.70),
+      0 0 0 1px var(--purple-border),
+      0 0 40px var(--purple-glow),
+      inset 0 1px 0 rgba(168,85,247,0.15);
+  }
+  50% {
+    box-shadow:
+      0 8px 40px rgba(0,0,0,0.70),
+      0 0 0 1px var(--purple-border),
+      0 0 80px var(--purple-glow),
+      inset 0 1px 0 rgba(168,85,247,0.25);
+  }
+}
+
+@keyframes starFloat {
+  0%   { transform: translateY(0)   rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(-80px) rotate(720deg); opacity: 0; }
+}
+
+@keyframes sorpresaShake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px) rotate(-2deg); }
+  40%      { transform: translateX(6px)  rotate(2deg); }
+  60%      { transform: translateX(-4px) rotate(-1deg); }
+  80%      { transform: translateX(4px)  rotate(1deg); }
+}
+
+/* ═══════════════════════════════════════
+   SELLO
+════════════════════════════════════════ */
+@keyframes stampAppear {
+  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+  60%  { transform: scale(1.2) rotate(5deg);  opacity: 1; }
+  100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+}
+
+/* ═══════════════════════════════════════
+   CONFIRMACIÓN
+════════════════════════════════════════ */
+@keyframes bounceIn {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* ═══════════════════════════════════════
+   GENERALES
+════════════════════════════════════════ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* Clase utilitaria para aplicar shake */
+.anim-shake {
+  animation: sorpresaShake 0.5s ease;
+}
