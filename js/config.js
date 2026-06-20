@@ -50,7 +50,7 @@ const CONFIG = {
 
   // Modo pruebas: activo por URL param ?test=1
   // Para DESACTIVARLO en producción, cambiar a false
-  TEST_MODE_ENABLED: false,
+  TEST_MODE_ENABLED: true,
   TEST_MODE_PARAM: "test",
 
   // Spins base que tiene un usuario nuevo
