@@ -59,4 +59,5 @@ const CONFIG = {
   LOCAL_STORAGE_KEYS: {
     session: "sr_session"
   }
+  // conetar
 };
