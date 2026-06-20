@@ -1,30 +1,30 @@
 // ═══════════════════════════════════════
-// SETUP DEL CANVAS
+// SETUP
 // ═══════════════════════════════════════
 
-const canvas  = document.getElementById("canvas-ruleta");
-const ctx     = canvas.getContext("2d");
-const CX      = canvas.width  / 2;
-const CY      = canvas.height / 2;
-const RADIUS  = CX - 8;
+const canvas = document.getElementById("canvas-ruleta");
+const ctx    = canvas.getContext("2d");
+const CX     = canvas.width  / 2;
+const CY     = canvas.height / 2;
+const RADIUS = CX - 10;
 
-// Ángulo actual de rotación (en radianes), persiste entre giros
 let currentAngle = 0;
 let isSpinning   = false;
 
 // ═══════════════════════════════════════
-// CÁLCULO DE PESOS
+// SEGMENTOS VISUALES — todos iguales
+// La probabilidad real vive en getWeightedResult(),
+// NO en el tamaño visual del sector.
 // ═══════════════════════════════════════
 
-// Convierte los pesos de WHEEL_OPTIONS en ángulos acumulados
 function buildSegments() {
-  const totalWeight = CONFIG.WHEEL_OPTIONS.reduce((s, o) => s + o.weight, 0);
-  let accumulated = 0;
+  const count     = CONFIG.WHEEL_OPTIONS.length;
+  const sliceSize = (Math.PI * 2) / count;
+  const START     = -Math.PI / 2; // 12 en punto
 
-  return CONFIG.WHEEL_OPTIONS.map(option => {
-    const startAngle = (accumulated / totalWeight) * (Math.PI * 2);
-    accumulated += option.weight;
-    const endAngle = (accumulated / totalWeight) * (Math.PI * 2);
+  return CONFIG.WHEEL_OPTIONS.map((option, i) => {
+    const startAngle = START + i * sliceSize;
+    const endAngle   = START + (i + 1) * sliceSize;
     return { ...option, startAngle, endAngle };
   });
 }
@@ -32,23 +32,21 @@ function buildSegments() {
 const SEGMENTS = buildSegments();
 
 // ═══════════════════════════════════════
-// RESULTADO PONDERADO
+// RESULTADO PONDERADO (independiente del visual)
 // ═══════════════════════════════════════
 
 function getWeightedResult() {
   const totalWeight = CONFIG.WHEEL_OPTIONS.reduce((s, o) => s + o.weight, 0);
-  const rand = Math.random() * totalWeight;
-  let cumulative = 0;
-
+  const rand        = Math.random() * totalWeight;
+  let   cumulative  = 0;
   for (const option of CONFIG.WHEEL_OPTIONS) {
     cumulative += option.weight;
     if (rand <= cumulative) return option.label;
   }
-
   return CONFIG.WHEEL_OPTIONS[0].label;
 }
 
-// Dado un resultado, devuelve el ángulo central del segmento en la ruleta
+// Ángulo central del segmento visual de un label
 function getSegmentCenterAngle(label) {
   const seg = SEGMENTS.find(s => s.label === label);
   if (!seg) return 0;
@@ -56,73 +54,49 @@ function getSegmentCenterAngle(label) {
 }
 
 // ═══════════════════════════════════════
-// DIBUJO DE LA RULETA
+// PALETA — plana y opaca
+// ═══════════════════════════════════════
+
+const SEGMENT_FILLS = [
+  { fill: "#2a2318", stroke: "rgba(180,140,60,0.30)" },
+  { fill: "#22201a", stroke: "rgba(180,140,60,0.22)" },
+  { fill: "#261f10", stroke: "rgba(180,140,60,0.28)" },
+  { fill: "#1e1c14", stroke: "rgba(180,140,60,0.18)" },
+];
+
+function getSegmentFill(index, seg) {
+  if (seg.special) return { fill: "#1a1030", stroke: "rgba(140,70,220,0.45)" };
+  if (seg.noCount) return { fill: "#1c1c24", stroke: "rgba(100,100,130,0.22)" };
+  return SEGMENT_FILLS[index % SEGMENT_FILLS.length];
+}
+
+// ═══════════════════════════════════════
+// DIBUJO COMPLETO
 // ═══════════════════════════════════════
 
 function drawWheel(rotation = 0) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Sombra exterior
-  ctx.save();
-  ctx.shadowColor = "rgba(201, 168, 76, 0.25)";
-  ctx.shadowBlur  = 24;
-
-  SEGMENTS.forEach(seg => {
+  SEGMENTS.forEach((seg, idx) => {
     const start = seg.startAngle + rotation;
     const end   = seg.endAngle   + rotation;
+    const color = getSegmentFill(idx, seg);
 
-    // ── Sector ──
+    // Sector
     ctx.beginPath();
     ctx.moveTo(CX, CY);
     ctx.arc(CX, CY, RADIUS, start, end);
     ctx.closePath();
-
-    // Gradiente radial por sector
-    const midAngle = (start + end) / 2;
-    const gx = CX + Math.cos(midAngle) * RADIUS * 0.5;
-    const gy = CY + Math.sin(midAngle) * RADIUS * 0.5;
-    const grad = ctx.createRadialGradient(gx, gy, 0, CX, CY, RADIUS);
-
-    if (seg.special) {
-      // Sorpresa: morado
-      grad.addColorStop(0, "#9f4ff5");
-      grad.addColorStop(1, "#4a1080");
-    } else if (seg.noCount) {
-      // Otro intento: gris oscuro
-      grad.addColorStop(0, "#444444");
-      grad.addColorStop(1, "#222222");
-    } else {
-      // Opciones normales: variantes doradas/oscuras alternadas
-      const isEven = SEGMENTS.indexOf(seg) % 2 === 0;
-      if (isEven) {
-        grad.addColorStop(0, "#2a2000");
-        grad.addColorStop(1, "#1a1400");
-      } else {
-        grad.addColorStop(0, "#1e1800");
-        grad.addColorStop(1, "#100e00");
-      }
-    }
-
-    ctx.fillStyle = grad;
+    ctx.fillStyle   = color.fill;
     ctx.fill();
-
-    // ── Borde del sector ──
-    ctx.strokeStyle = seg.special
-      ? "rgba(168, 85, 247, 0.6)"
-      : "rgba(201, 168, 76, 0.25)";
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = color.stroke;
+    ctx.lineWidth   = 1;
     ctx.stroke();
 
-    // ── Texto del sector ──
     drawSegmentLabel(seg, start, end);
   });
 
-  ctx.restore();
-
-  // Aro exterior dorado
-  drawRim(rotation);
-
-  // Centro
+  drawDividers(rotation);
   drawCenter();
 }
 
@@ -136,36 +110,33 @@ function drawSegmentLabel(seg, start, end) {
   ctx.translate(tx, ty);
   ctx.rotate(midAngle + Math.PI / 2);
 
-  // Tamaño de fuente adaptativo según longitud del label
-  const arcLength = (end - start) * RADIUS;
-  const fontSize  = Math.min(14, Math.max(9, arcLength / (seg.label.length * 0.75)));
+  // Tamaño fijo porque todos los sectores son iguales
+  const fontSize = 13;
 
-  ctx.font        = `700 ${fontSize}px 'Segoe UI', system-ui, sans-serif`;
-  ctx.textAlign   = "center";
-  ctx.textBaseline= "middle";
+  ctx.font         = `600 ${fontSize}px 'Segoe UI', system-ui, sans-serif`;
+  ctx.textAlign    = "center";
+  ctx.textBaseline = "middle";
 
   if (seg.special) {
-    // Sorpresa: texto blanco con glow morado
-    ctx.shadowColor = "#a855f7";
-    ctx.shadowBlur  = 10;
-    ctx.fillStyle   = "#ffffff";
+    ctx.fillStyle   = "#cc99ff";
+    ctx.shadowColor = "rgba(168,85,247,0.55)";
+    ctx.shadowBlur  = 8;
   } else if (seg.noCount) {
-    ctx.fillStyle   = "#888888";
+    ctx.fillStyle   = "#66667a";
     ctx.shadowBlur  = 0;
   } else {
-    ctx.shadowColor = "rgba(201, 168, 76, 0.8)";
-    ctx.shadowBlur  = 6;
-    ctx.fillStyle   = "#f0c040";
+    ctx.fillStyle   = "#c8a03c";
+    ctx.shadowColor = "rgba(190,150,50,0.35)";
+    ctx.shadowBlur  = 4;
   }
 
-  // Texto largo: partir en dos líneas si es necesario
   const words = seg.label.split(" ");
-  if (words.length > 1 && seg.label.length > 8) {
-    const mid = Math.ceil(words.length / 2);
+  if (words.length > 1) {
+    const mid   = Math.ceil(words.length / 2);
     const line1 = words.slice(0, mid).join(" ");
     const line2 = words.slice(mid).join(" ");
-    ctx.fillText(line1, 0, -fontSize * 0.6);
-    ctx.fillText(line2, 0,  fontSize * 0.6);
+    ctx.fillText(line1, 0, -fontSize * 0.65);
+    ctx.fillText(line2, 0,  fontSize * 0.65);
   } else {
     ctx.fillText(seg.label, 0, 0);
   }
@@ -173,135 +144,124 @@ function drawSegmentLabel(seg, start, end) {
   ctx.restore();
 }
 
-function drawRim(rotation) {
-  // Marcas del aro exterior
-  ctx.save();
-  const rimRadius = RADIUS + 4;
+// Líneas divisorias entre sectores
+function drawDividers(rotation) {
+  const count     = SEGMENTS.length;
+  const sliceSize = (Math.PI * 2) / count;
+  const START     = -Math.PI / 2;
 
-  SEGMENTS.forEach(seg => {
-    const angle = seg.startAngle + rotation;
+  for (let i = 0; i < count; i++) {
+    const angle = START + i * sliceSize + rotation;
     ctx.beginPath();
     ctx.moveTo(
-      CX + Math.cos(angle) * (RADIUS - 2),
-      CY + Math.sin(angle) * (RADIUS - 2)
+      CX + Math.cos(angle) * 18,
+      CY + Math.sin(angle) * 18
     );
     ctx.lineTo(
-      CX + Math.cos(angle) * (rimRadius + 2),
-      CY + Math.sin(angle) * (rimRadius + 2)
+      CX + Math.cos(angle) * RADIUS,
+      CY + Math.sin(angle) * RADIUS
     );
-    ctx.strokeStyle = seg.special
-      ? "rgba(168,85,247,0.7)"
-      : "rgba(201,168,76,0.5)";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(180,140,60,0.22)";
+    ctx.lineWidth   = 1;
     ctx.stroke();
-  });
-
-  ctx.restore();
+  }
 }
 
 function drawCenter() {
-  // Círculo central
-  const centerRadius = 22;
+  const r = 20;
 
-  // Sombra
   ctx.save();
-  ctx.shadowColor = "rgba(201,168,76,0.5)";
-  ctx.shadowBlur  = 16;
+  ctx.shadowColor = "rgba(200,160,60,0.35)";
+  ctx.shadowBlur  = 12;
 
-  // Relleno
-  const centerGrad = ctx.createRadialGradient(CX, CY, 0, CX, CY, centerRadius);
-  centerGrad.addColorStop(0, "#ffe066");
-  centerGrad.addColorStop(1, "#a07830");
   ctx.beginPath();
-  ctx.arc(CX, CY, centerRadius, 0, Math.PI * 2);
-  ctx.fillStyle = centerGrad;
+  ctx.arc(CX, CY, r, 0, Math.PI * 2);
+  ctx.fillStyle   = "#28200e";
   ctx.fill();
-
-  // Borde
-  ctx.strokeStyle = "rgba(255,224,102,0.6)";
-  ctx.lineWidth   = 2;
+  ctx.strokeStyle = "rgba(200,160,60,0.45)";
+  ctx.lineWidth   = 1.5;
   ctx.stroke();
 
-  // Emoji central
-  ctx.font      = "16px serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.shadowBlur = 0;
-  ctx.fillText("🎰", CX, CY);
+  ctx.restore();
 
+  // Rombo central
+  ctx.save();
+  ctx.fillStyle = "#c9a84c";
+  ctx.beginPath();
+  ctx.moveTo(CX,      CY - 10);
+  ctx.lineTo(CX + 8,  CY);
+  ctx.lineTo(CX,      CY + 10);
+  ctx.lineTo(CX - 8,  CY);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#28200e";
+  ctx.beginPath();
+  ctx.moveTo(CX,      CY - 5);
+  ctx.lineTo(CX + 4,  CY);
+  ctx.lineTo(CX,      CY + 5);
+  ctx.lineTo(CX - 4,  CY);
+  ctx.closePath();
+  ctx.fill();
   ctx.restore();
 }
 
 // ═══════════════════════════════════════
-// ANIMACIÓN DE GIRO
+// EASING
 // ═══════════════════════════════════════
 
-// Easing: ease-out cúbico
-function easeOut(t) {
+function easeOutCubic(t) {
   return 1 - Math.pow(1 - t, 3);
 }
 
-// Easing con rebote suave al final
-function easeOutBounce(t) {
-  if (t < 0.85) {
-    return easeOut(t / 0.85);
-  }
-  const overshoot = (t - 0.85) / 0.15;
-  return 1 + Math.sin(overshoot * Math.PI) * 0.015;
+function easeOutWithBounce(t) {
+  if (t < 0.88) return easeOutCubic(t / 0.88);
+  const over = (t - 0.88) / 0.12;
+  return 1 + Math.sin(over * Math.PI) * 0.012;
 }
 
-/**
- * Anima la ruleta y llama a callback(resultado) al terminar.
- * Llamada desde app.js: spinWheel(onSpinComplete)
- */
+// ═══════════════════════════════════════
+// ANIMACIÓN
+// ═══════════════════════════════════════
+
 function spinWheel(callback) {
   if (isSpinning) return;
   if (!canSpin())  return;
 
   isSpinning = true;
 
-  // Determinar resultado ANTES de animar (para calcular ángulo de parada)
   const resultado   = getWeightedResult();
-  const targetCenter = getSegmentCenterAngle(resultado);
+  const centerAngle = getSegmentCenterAngle(resultado);
 
-  // Vueltas completas: entre 6 y 10 para sensación de emoción
-  const extraSpins  = (6 + Math.floor(Math.random() * 4)) * Math.PI * 2;
+  // El puntero apunta a -π/2 (arriba)
+  // Queremos que centerAngle del resultado quede ahí
+  // rotation_final = -π/2 - centerAngle
+  const targetRotation = -Math.PI / 2 - centerAngle;
 
-  // El puntero está en la parte superior (−π/2).
-  // Queremos que targetCenter quede apuntando al puntero al terminar.
-  // Ajustamos para que la parada sea exacta.
-  const pointerAngle = -Math.PI / 2;
-  const targetFinal  = pointerAngle - targetCenter;
-
-  // Diferencia desde ángulo actual, siempre avanzando
-  let delta = (targetFinal - currentAngle) % (Math.PI * 2);
+  const extraSpins = (7 + Math.floor(Math.random() * 4)) * Math.PI * 2;
+  let   delta      = ((targetRotation - currentAngle) % (Math.PI * 2));
   if (delta <= 0) delta += Math.PI * 2;
   delta += extraSpins;
 
-  const totalAngle = delta;
-  const startAngle = currentAngle;
-
-  const DURATION_MS = 4500 + Math.random() * 1000; // 4.5–5.5s
+  const startAngle  = currentAngle;
+  const DURATION_MS = 4800 + Math.random() * 1000;
   let   startTime   = null;
 
   function animate(timestamp) {
     if (!startTime) startTime = timestamp;
     const elapsed  = timestamp - startTime;
     const progress = Math.min(elapsed / DURATION_MS, 1);
-    const easedProgress = easeOutBounce(progress);
+    const eased    = easeOutWithBounce(progress);
 
-    currentAngle = startAngle + totalAngle * easedProgress;
+    currentAngle = startAngle + delta * eased;
     drawWheel(currentAngle);
 
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      // Normalizar ángulo final para evitar acumulación infinita
       currentAngle = currentAngle % (Math.PI * 2);
       isSpinning   = false;
       drawWheel(currentAngle);
-
-      // Llamar al callback con el resultado
       callback(resultado);
     }
   }
@@ -310,7 +270,7 @@ function spinWheel(callback) {
 }
 
 // ═══════════════════════════════════════
-// DIBUJO INICIAL
+// RENDER INICIAL
 // ═══════════════════════════════════════
 
 drawWheel(currentAngle);

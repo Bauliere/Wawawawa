@@ -1,4 +1,65 @@
 // ═══════════════════════════════════════
+// PARTÍCULAS DE FONDO
+// ═══════════════════════════════════════
+
+(function initParticles() {
+  const canvas = document.getElementById("particles-canvas");
+  const ctx    = canvas.getContext("2d");
+  let W, H, particles;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function createParticles() {
+    particles = [];
+    const count = Math.floor((W * H) / 18000);
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x:     Math.random() * W,
+        y:     Math.random() * H,
+        r:     0.6 + Math.random() * 1.4,
+        color: pickParticleColor(),
+        vx:    (Math.random() - 0.5) * 0.25,
+        vy:    -0.1 - Math.random() * 0.3,
+        alpha: 0.15 + Math.random() * 0.35
+      });
+    }
+  }
+
+  function pickParticleColor() {
+    const r = Math.random();
+    if (r < 0.15) return "#c9a84c";
+    if (r < 0.22) return "#7c3aed";
+    return "#ffffff";
+  }
+
+  function drawParticles() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle   = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.y < -5)    { p.y = H + 5; p.x = Math.random() * W; }
+      if (p.x < -5)    { p.x = W + 5; }
+      if (p.x > W + 5) { p.x = -5; }
+    });
+    requestAnimationFrame(drawParticles);
+  }
+
+  resize();
+  createParticles();
+  drawParticles();
+  window.addEventListener("resize", () => { resize(); createParticles(); });
+})();
+
+// ═══════════════════════════════════════
 // REFERENCIAS AL DOM
 // ═══════════════════════════════════════
 
@@ -11,18 +72,13 @@ const screens = {
 };
 
 const ui = {
-  // Login
   inputNombre:          document.getElementById("input-nombre"),
   btnEntrar:            document.getElementById("btn-entrar"),
   loginError:           document.getElementById("login-error"),
-
-  // Ruleta
   saludoNombre:         document.getElementById("saludo-nombre"),
   spinsRestantes:       document.getElementById("spins-restantes"),
   btnGirar:             document.getElementById("btn-girar"),
   btnVerSellos:         document.getElementById("btn-ver-sellos"),
-
-  // Modal resultado
   modalResultado:       document.getElementById("modal-resultado"),
   modalCardResultado:   document.getElementById("modal-card-resultado"),
   resultadoNormal:      document.getElementById("resultado-normal"),
@@ -32,21 +88,15 @@ const ui = {
   btnAgendar:           document.getElementById("btn-agendar"),
   btnOtroIntento:       document.getElementById("btn-otro-intento"),
   btnAgendarSorpresa:   document.getElementById("btn-agendar-sorpresa"),
-
-  // Agenda
   btnBackAgenda:        document.getElementById("btn-back-agenda"),
   agendaResultadoBadge: document.getElementById("agenda-resultado-badge"),
   agendaError:          document.getElementById("agenda-error"),
   btnConfirmarReserva:  document.getElementById("btn-confirmar-reserva"),
-
-  // Confirmación
   confResultado:        document.getElementById("conf-resultado"),
   confFecha:            document.getElementById("conf-fecha"),
   confHora:             document.getElementById("conf-hora"),
   btnVerSelloConf:      document.getElementById("btn-ver-sellos-conf"),
   btnInicioConf:        document.getElementById("btn-inicio-conf"),
-
-  // Sellos
   btnBackSellos:        document.getElementById("btn-back-sellos"),
   sellosCount:          document.getElementById("sellos-count"),
   sellosGrid:           document.getElementById("sellos-grid"),
@@ -64,10 +114,8 @@ function navigateTo(screenName) {
     s.classList.add("hidden");
     s.classList.remove("active");
   });
-
   const target = screens[screenName];
   if (!target) return;
-
   target.classList.remove("hidden");
   target.classList.add("active");
   setState("pantallaActual", screenName);
@@ -100,11 +148,8 @@ function updateSpinsUI() {
   const n = appState.spinsRestantes;
   ui.spinsRestantes.textContent = n;
   ui.btnGirar.disabled = n <= 0;
-
   const label = document.querySelector(".spins-label");
-  if (label) label.textContent = n === 1
-    ? " intento restante"
-    : " intentos restantes";
+  if (label) label.textContent = n === 1 ? " intento restante" : " intentos restantes";
 }
 
 // ═══════════════════════════════════════
@@ -112,10 +157,22 @@ function updateSpinsUI() {
 // ═══════════════════════════════════════
 
 function onNombreInput() {
-  const val = ui.inputNombre.value.trim();
-  clearError(ui.loginError);
+  const val  = ui.inputNombre.value.trim();
   const norm = CONFIG.normalizeName(val);
-  ui.btnEntrar.disabled = !CONFIG.ALLOWED_NAMES_NORM.includes(norm);
+
+  if (val.length === 0) {
+    clearError(ui.loginError);
+    ui.btnEntrar.disabled = true;
+    return;
+  }
+
+  if (CONFIG.ALLOWED_NAMES_NORM.includes(norm)) {
+    clearError(ui.loginError);
+    ui.btnEntrar.disabled = false;
+  } else {
+    showError(ui.loginError, "Hey! esto no es para ti");
+    ui.btnEntrar.disabled = true;
+  }
 }
 
 async function onEntrar() {
@@ -127,7 +184,7 @@ async function onEntrar() {
     const data = await apiGetProgress(nombreRaw);
 
     if (!data.permitido) {
-      showError(ui.loginError, "Ese nombre no está en la lista. ¿Segura que escribiste bien?");
+      showError(ui.loginError, "Hey! esto no es para ti");
       return;
     }
 
@@ -145,7 +202,7 @@ async function onEntrar() {
 }
 
 // ═══════════════════════════════════════
-// RULETA → MODAL RESULTADO
+// RULETA
 // ═══════════════════════════════════════
 
 function onSpinComplete(resultado) {
@@ -174,15 +231,14 @@ function showModalResultado(resultado) {
     ui.resultadoNormal.classList.add("hidden");
     ui.resultadoSorpresa.classList.remove("hidden");
     ui.modalCardResultado.classList.add("is-sorpresa");
-    spawnSorpresaStars();
+    spawnSorpresaParticles();
   } else {
     ui.resultadoTexto.textContent = resultado;
-
     if (esOtroIntento) {
-      ui.resultadoDesc.textContent = "Aún no se rinde el destino... ¡inténtalo de nuevo!";
+      ui.resultadoDesc.textContent = "El destino no se rinde... intenta de nuevo.";
       ui.btnOtroIntento.classList.remove("hidden");
     } else {
-      ui.resultadoDesc.textContent = "¡Genial! Ahora elige cuándo.";
+      ui.resultadoDesc.textContent = "Elige cuándo lo hacemos.";
       ui.btnAgendar.classList.remove("hidden");
     }
   }
@@ -193,36 +249,34 @@ function showModalResultado(resultado) {
 function closeModalResultado() {
   ui.modalResultado.classList.add("hidden");
   ui.modalCardResultado.classList.remove("is-sorpresa");
-  const starsEl = document.querySelector(".sorpresa-stars");
-  if (starsEl) starsEl.innerHTML = "";
+  const p = document.querySelector(".sorpresa-particles");
+  if (p) p.innerHTML = "";
 }
 
-function spawnSorpresaStars() {
-  const container = document.querySelector(".sorpresa-stars");
+function spawnSorpresaParticles() {
+  const container = document.querySelector(".sorpresa-particles");
   if (!container) return;
   container.innerHTML = "";
 
-  // Partículas SVG en lugar de emojis
-  const shapes = [
-    `<svg viewBox="0 0 10 10"><polygon points="5,0 6.5,3.5 10,3.5 7,6 8,10 5,7.5 2,10 3,6 0,3.5 3.5,3.5" fill="#a855f7"/></svg>`,
+  const svgs = [
+    `<svg viewBox="0 0 10 10"><polygon points="5,0 6.2,3.8 10,3.8 7,6 8,10 5,7.5 2,10 3,6 0,3.8 3.8,3.8" fill="#a855f7"/></svg>`,
     `<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#7c3aed"/></svg>`,
     `<svg viewBox="0 0 10 10"><rect x="2" y="2" width="6" height="6" rx="1" fill="#c084fc" transform="rotate(45 5 5)"/></svg>`
   ];
 
   for (let i = 0; i < 14; i++) {
-    const star = document.createElement("span");
-    star.innerHTML = shapes[Math.floor(Math.random() * shapes.length)];
-    star.style.cssText = `
+    const el = document.createElement("span");
+    el.innerHTML = svgs[Math.floor(Math.random() * svgs.length)];
+    el.style.cssText = `
       position: absolute;
-      width: ${16 + Math.random() * 14}px;
-      height: ${16 + Math.random() * 14}px;
+      width: ${14 + Math.random() * 12}px;
+      height: ${14 + Math.random() * 12}px;
       left: ${Math.random() * 90}%;
       top: ${20 + Math.random() * 70}%;
-      animation: starFloat ${1.5 + Math.random() * 2}s ease-out
-                 ${Math.random() * 1}s forwards;
+      animation: particleFloat ${1.5 + Math.random() * 2}s ease-out ${Math.random()}s forwards;
       pointer-events: none;
     `;
-    container.appendChild(star);
+    container.appendChild(el);
   }
 }
 
@@ -232,15 +286,8 @@ function spawnSorpresaStars() {
 
 function openAgenda() {
   closeModalResultado();
-
-  if (!hasValidResult()) {
-    navigateTo("ruleta");
-    return;
-  }
-
-  ui.agendaResultadoBadge.innerHTML =
-    `Plan: <strong>${appState.resultado}</strong>`;
-
+  if (!hasValidResult()) { navigateTo("ruleta"); return; }
+  ui.agendaResultadoBadge.innerHTML = `Plan: <strong>${appState.resultado}</strong>`;
   initCalendar();
   initHoraSelector();
   navigateTo("agenda");
@@ -266,14 +313,12 @@ async function onConfirmarReserva() {
   try {
     await apiSaveBooking({ fechaISO, fechaTexto, horaTexto });
     setBooking(fechaISO, fechaTexto, horaTexto);
-
     ui.confResultado.textContent = appState.resultado;
     ui.confFecha.textContent     = fechaTexto;
     ui.confHora.textContent      = horaTexto + " (tentativa)";
-
     navigateTo("confirmacion");
   } catch (err) {
-    showError(ui.agendaError, "No se pudo guardar la reserva. Intenta de nuevo.");
+    showError(ui.agendaError, "No se pudo guardar. Intenta de nuevo.");
     console.error("[SaveBooking]", err);
   } finally {
     setLoading(ui.btnConfirmarReserva, false);
@@ -281,7 +326,7 @@ async function onConfirmarReserva() {
 }
 
 // ═══════════════════════════════════════
-// SELLOS
+// SELLOS — lógica corregida
 // ═══════════════════════════════════════
 
 function openSellos(origen) {
@@ -292,24 +337,39 @@ function openSellos(origen) {
 
 async function onSellarHoy() {
   clearError(ui.sellosError);
+
+  // ── CORRECCIÓN: validar estado local ANTES de llamar al backend ──
+  // Esto evita que el primer render permita múltiples sellos
+  // porque appState.sellosHoy ya debe reflejar el estado real.
+  if (appState.sellosHoy) {
+    showError(ui.sellosError, "Ya sellaste hoy. Vuelve mañana.");
+    renderStamps(); // refrescar UI por si acaso
+    return;
+  }
+
   setLoading(ui.btnSellarHoy, true);
 
   try {
     const data = await apiSaveStamp();
 
     if (!data.ok) {
+      // El backend confirma que ya selló: sincronizar estado local
       if (data.razon === "ya_sellado") {
-        showError(ui.sellosError, "Ya sellaste hoy. ¡Vuelve mañana!");
+        setState("sellosHoy", true); // ← forzar estado local en sync
+        showError(ui.sellosError, "Ya sellaste hoy. Vuelve mañana.");
+        renderStamps();
       } else {
         showError(ui.sellosError, data.razon || "No se pudo sellar.");
       }
       return;
     }
 
+    // Éxito: actualizar estado y marcar que ya selló hoy
     updateStamps(
       data.stampsEnCiclo,
       data.totalStamps ?? appState.totalStamps + 1
     );
+    // updateStamps ya pone sellosHoy = true internamente en state.js
 
     if (data.bonusSpinEarned) {
       ui.bonusMsg.classList.remove("hidden");
@@ -317,7 +377,6 @@ async function onSellarHoy() {
       updateSpinsUI();
     }
 
-    // ← Corrección aplicada: usa animación
     renderStampsWithAnimation();
 
   } catch (err) {
@@ -333,44 +392,35 @@ async function onSellarHoy() {
 // ═══════════════════════════════════════
 
 function initEventListeners() {
-  // Login
   ui.inputNombre.addEventListener("input", onNombreInput);
   ui.inputNombre.addEventListener("keydown", e => {
     if (e.key === "Enter" && !ui.btnEntrar.disabled) onEntrar();
   });
   ui.btnEntrar.addEventListener("click", onEntrar);
 
-  // Ruleta
   ui.btnGirar.addEventListener("click", () => {
     if (!canSpin()) return;
     spinWheel(onSpinComplete);
   });
   ui.btnVerSellos.addEventListener("click", () => openSellos("ruleta"));
 
-  // Modal resultado
   ui.btnAgendar.addEventListener("click", openAgenda);
   ui.btnAgendarSorpresa.addEventListener("click", openAgenda);
-  ui.btnOtroIntento.addEventListener("click", () => {
-    closeModalResultado();
-  });
+  ui.btnOtroIntento.addEventListener("click", closeModalResultado);
 
   ui.modalResultado.addEventListener("click", e => {
     if (
       e.target === ui.modalResultado &&
       CONFIG.NO_COUNT_RESULTS.includes(appState.resultado)
-    ) {
-      closeModalResultado();
-    }
+    ) closeModalResultado();
   });
 
-  // Agenda
   ui.btnBackAgenda.addEventListener("click", () => {
     clearError(ui.agendaError);
     navigateTo("ruleta");
   });
   ui.btnConfirmarReserva.addEventListener("click", onConfirmarReserva);
 
-  // Confirmación
   ui.btnVerSelloConf.addEventListener("click", () => openSellos("confirmacion"));
   ui.btnInicioConf.addEventListener("click", () => {
     resetSession();
@@ -379,26 +429,25 @@ function initEventListeners() {
     navigateTo("login");
   });
 
-  // Sellos
   ui.btnBackSellos.addEventListener("click", () => {
-    const origen = ui.btnBackSellos.dataset.origen || "ruleta";
-    navigateTo(origen === "confirmacion" ? "confirmacion" : "ruleta");
+    navigateTo(
+      ui.btnBackSellos.dataset.origen === "confirmacion"
+        ? "confirmacion"
+        : "ruleta"
+    );
   });
   ui.btnSellarHoy.addEventListener("click", onSellarHoy);
 }
 
 // ═══════════════════════════════════════
-// INICIALIZACIÓN
+// INIT
 // ═══════════════════════════════════════
 
 function init() {
   navigateTo("login");
   initEventListeners();
   ui.btnEntrar.disabled = true;
-
-  if (isTestMode()) {
-    console.info("[Salidas Random] Modo pruebas ACTIVO");
-  }
+  if (isTestMode()) console.info("[SR] Modo pruebas ACTIVO");
 }
 
 document.addEventListener("DOMContentLoaded", init);

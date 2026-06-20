@@ -1,34 +1,45 @@
-/* ═══════════════════════════════════════
-   RULETA
-════════════════════════════════════════ */
 @keyframes wheelSpin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(var(--spin-degrees, 1800deg)); }
 }
 
-/* ═══════════════════════════════════════
-   SORPRESA
-════════════════════════════════════════ */
 @keyframes sorpresaPulse {
   0%, 100% {
     box-shadow:
-      0 8px 40px rgba(0,0,0,0.70),
+      0 8px 40px rgba(0,0,0,0.80),
       0 0 0 1px var(--purple-border),
       0 0 40px var(--purple-glow),
-      inset 0 1px 0 rgba(168,85,247,0.15);
+      inset 0 1px 0 rgba(168,85,247,0.12);
   }
   50% {
     box-shadow:
-      0 8px 40px rgba(0,0,0,0.70),
+      0 8px 40px rgba(0,0,0,0.80),
       0 0 0 1px var(--purple-border),
       0 0 80px var(--purple-glow),
-      inset 0 1px 0 rgba(168,85,247,0.25);
+      inset 0 1px 0 rgba(168,85,247,0.22);
   }
 }
 
-@keyframes starFloat {
-  0%   { transform: translateY(0)   rotate(0deg);   opacity: 1; }
-  100% { transform: translateY(-80px) rotate(720deg); opacity: 0; }
+@keyframes particleFloat {
+  0%   { transform: translateY(0)    rotate(0deg);   opacity: 0.7; }
+  100% { transform: translateY(-90px) rotate(720deg); opacity: 0; }
+}
+
+@keyframes stampAppear {
+  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+  60%  { transform: scale(1.2) rotate(5deg);  opacity: 1; }
+  100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+}
+
+@keyframes bounceIn {
+  0%   { transform: scale(0.4); opacity: 0; }
+  70%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes sorpresaShake {
@@ -39,38 +50,4 @@
   80%      { transform: translateX(4px)  rotate(1deg); }
 }
 
-/* ═══════════════════════════════════════
-   SELLO
-════════════════════════════════════════ */
-@keyframes stampAppear {
-  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
-  60%  { transform: scale(1.2) rotate(5deg);  opacity: 1; }
-  100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
-}
-
-/* ═══════════════════════════════════════
-   CONFIRMACIÓN
-════════════════════════════════════════ */
-@keyframes bounceIn {
-  0%   { transform: scale(0.5); opacity: 0; }
-  70%  { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(1); }
-}
-
-/* ═══════════════════════════════════════
-   GENERALES
-════════════════════════════════════════ */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
-}
-
-/* Clase utilitaria para aplicar shake */
-.anim-shake {
-  animation: sorpresaShake 0.5s ease;
-}
+.anim-shake { animation: sorpresaShake 0.5s ease; }

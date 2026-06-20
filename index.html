@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Salidas Random 🎰</title>
+  <title>Salidas Random</title>
   <link rel="icon" type="image/png" href="assets/favicon.png" />
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/screens.css" />
@@ -11,9 +11,12 @@
 </head>
 <body>
 
-  <!-- ═══════════════════════════════════════
+  <!-- Canvas de partículas de fondo -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- ═══════════════════════════
        PANTALLA 1: LOGIN
-  ════════════════════════════════════════ -->
+  ════════════════════════════ -->
   <section id="screen-login" class="screen active">
     <div class="glass-card login-card">
       <div class="login-logo">
@@ -37,15 +40,20 @@
       </div>
 
       <button id="btn-entrar" class="btn-primary" disabled>
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="#0a0800" stroke-width="2" stroke-linecap="round"/>
+          <polyline points="10 17 15 12 10 7" stroke="#0a0800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="15" y1="12" x2="3" y2="12" stroke="#0a0800" stroke-width="2" stroke-linecap="round"/>
+        </svg>
         <span class="btn-text">Entrar</span>
-        <span class="btn-loader hidden">⏳</span>
+        <span class="btn-loader hidden">Cargando...</span>
       </button>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════
+  <!-- ═══════════════════════════
        PANTALLA 2: RULETA
-  ════════════════════════════════════════ -->
+  ════════════════════════════ -->
   <section id="screen-ruleta" class="screen hidden">
     <header class="screen-header">
       <p id="saludo-nombre" class="saludo"></p>
@@ -56,64 +64,97 @@
     </header>
 
     <div class="wheel-wrapper">
-      <div class="wheel-pointer" aria-hidden="true">▼</div>
+      <div class="wheel-pointer"></div>
       <canvas id="canvas-ruleta" width="380" height="380"></canvas>
     </div>
 
     <button id="btn-girar" class="btn-primary btn-spin">
-      <span class="btn-text">🎰 ¡Girar!</span>
-      <span class="btn-loader hidden">girando...</span>
+      <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+        <path d="M21 12a9 9 0 1 1-9-9" stroke="#0a0800" stroke-width="2.5" stroke-linecap="round"/>
+        <polyline points="21 3 21 9 15 9" stroke="#0a0800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="btn-text">Girar</span>
+      <span class="btn-loader hidden">Girando...</span>
     </button>
 
     <button id="btn-ver-sellos" class="btn-ghost">
-      🏅 Ver mis sellos
+      <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Ver mis sellos
     </button>
   </section>
 
-  <!-- ═══════════════════════════════════════
-       MODAL: RESULTADO DE LA RULETA
-  ════════════════════════════════════════ -->
+  <!-- ═══════════════════════════
+       MODAL: RESULTADO
+  ════════════════════════════ -->
   <div id="modal-resultado" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="glass-card modal-card" id="modal-card-resultado">
 
-      <!-- Estado normal -->
       <div id="resultado-normal">
-        <p class="modal-label">¡Salió!</p>
+        <p class="modal-label">Resultado</p>
         <h2 id="resultado-texto" class="resultado-titulo"></h2>
         <p id="resultado-descripcion" class="resultado-desc"></p>
         <div class="modal-actions">
-          <button id="btn-agendar" class="btn-primary hidden">📅 Agendar</button>
-          <button id="btn-otro-intento" class="btn-ghost hidden">🔄 Volver a girar</button>
+          <button id="btn-agendar" class="btn-primary hidden">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="18" rx="2" stroke="#0a0800" stroke-width="2"/>
+              <line x1="16" y1="2" x2="16" y2="6" stroke="#0a0800" stroke-width="2" stroke-linecap="round"/>
+              <line x1="8"  y1="2" x2="8"  y2="6" stroke="#0a0800" stroke-width="2" stroke-linecap="round"/>
+              <line x1="3"  y1="10" x2="21" y2="10" stroke="#0a0800" stroke-width="2"/>
+            </svg>
+            Agendar
+          </button>
+          <button id="btn-otro-intento" class="btn-ghost hidden">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M1 4v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.51 15a9 9 0 1 0 .49-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Volver a girar
+          </button>
         </div>
       </div>
 
-      <!-- Estado especial: Sorpresa -->
       <div id="resultado-sorpresa" class="hidden">
-        <div class="sorpresa-stars" aria-hidden="true"></div>
-        <p class="sorpresa-label">¡¡SORPRESA!!</p>
-        <h2 class="sorpresa-titulo">✨ Sorpresa ✨</h2>
-        <p class="sorpresa-desc">Algo muy especial te espera...</p>
-        <button id="btn-agendar-sorpresa" class="btn-primary btn-sorpresa">💜 Agendar</button>
+        <div class="sorpresa-particles"></div>
+        <p class="sorpresa-label">Sorpresa</p>
+        <h2 class="sorpresa-titulo">Algo especial</h2>
+        <p class="sorpresa-desc">El destino tiene algo muy especial para ti...</p>
+        <button id="btn-agendar-sorpresa" class="btn-primary btn-sorpresa">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4" width="18" height="18" rx="2" stroke="#fff" stroke-width="2"/>
+            <line x1="16" y1="2" x2="16" y2="6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            <line x1="8"  y1="2" x2="8"  y2="6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            <line x1="3"  y1="10" x2="21" y2="10" stroke="#fff" stroke-width="2"/>
+          </svg>
+          Agendar
+        </button>
       </div>
 
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════
+  <!-- ═══════════════════════════
        PANTALLA 3: AGENDA
-  ════════════════════════════════════════ -->
+  ════════════════════════════ -->
   <section id="screen-agenda" class="screen hidden">
     <div class="glass-card agenda-card">
-      <button class="btn-back" id="btn-back-agenda" aria-label="Volver">← Volver</button>
+      <button class="btn-back" id="btn-back-agenda">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Volver
+      </button>
       <h2 class="screen-title">Elige la <span class="gold">fecha</span></h2>
 
       <div class="resultado-badge" id="agenda-resultado-badge"></div>
 
       <div class="calendar-wrapper">
         <div class="calendar-nav">
-          <button id="cal-prev" class="btn-cal-nav" aria-label="Mes anterior">‹</button>
+          <button id="cal-prev" class="btn-cal-nav">‹</button>
           <span id="cal-month-label" class="cal-month-label"></span>
-          <button id="cal-next" class="btn-cal-nav" aria-label="Mes siguiente">›</button>
+          <button id="cal-next" class="btn-cal-nav">›</button>
         </div>
         <div class="calendar-weekdays">
           <span>Dom</span><span>Lun</span><span>Mar</span>
@@ -135,18 +176,26 @@
       <p id="agenda-error" class="error-msg hidden"></p>
 
       <button id="btn-confirmar-reserva" class="btn-primary" disabled>
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+          <path d="M20 6L9 17l-5-5" stroke="#0a0800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
         Confirmar reserva
       </button>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════
+  <!-- ═══════════════════════════
        PANTALLA 4: CONFIRMACIÓN
-  ════════════════════════════════════════ -->
+  ════════════════════════════ -->
   <section id="screen-confirmacion" class="screen hidden">
     <div class="glass-card confirmacion-card">
-      <div class="confirmacion-icon">🎉</div>
-      <h2 class="screen-title">¡<span class="gold">Listo!</span></h2>
+      <div class="confirmacion-icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="rgba(201,168,76,0.15)" stroke="#c9a84c" stroke-width="1.5"/>
+          <path d="M7 12l4 4 6-7" stroke="#f0c040" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="screen-title"><span class="gold">Listo</span></h2>
       <p class="confirmacion-sub">Tu salida está agendada</p>
 
       <div class="resumen-reserva">
@@ -165,18 +214,35 @@
       </div>
 
       <div class="confirmacion-actions">
-        <button id="btn-ver-sellos-conf" class="btn-primary">🏅 Ver mis sellos</button>
-        <button id="btn-inicio-conf" class="btn-ghost">🏠 Inicio</button>
+        <button id="btn-ver-sellos-conf" class="btn-primary">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="#0a0800" stroke-width="2"/>
+            <path d="M8 12l3 3 5-5" stroke="#0a0800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Ver mis sellos
+        </button>
+        <button id="btn-inicio-conf" class="btn-ghost">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M3 12L12 3l9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 21V12h6v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Inicio
+        </button>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════
+  <!-- ═══════════════════════════
        PANTALLA 5: SELLOS
-  ════════════════════════════════════════ -->
+  ════════════════════════════ -->
   <section id="screen-sellos" class="screen hidden">
     <div class="glass-card sellos-card">
-      <button class="btn-back" id="btn-back-sellos" aria-label="Volver">← Volver</button>
+      <button class="btn-back" id="btn-back-sellos">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Volver
+      </button>
       <h2 class="screen-title">Mis <span class="gold">Sellos</span></h2>
 
       <div class="sellos-progreso">
@@ -188,19 +254,21 @@
       <div id="sellos-grid" class="sellos-grid"></div>
 
       <div id="sellos-bonus-msg" class="bonus-msg hidden">
-        🎊 ¡Completaste 15 sellos! Se agregó un intento extra.
+        Completaste 15 sellos. Se agregó un intento extra.
       </div>
 
-      <button id="btn-sellar-hoy" class="btn-primary">
-        📌 Sellar hoy
-      </button>
+    <button id="btn-sellar-hoy" class="btn-primary">
+  <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="9" stroke="#0a0800" stroke-width="2"/>
+    <polyline points="12,7 12,12 15,14" stroke="#0a0800" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span>Sellar hoy</span>
+</button>
       <p id="sellos-error" class="error-msg hidden"></p>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════
-       SCRIPTS (orden importa)
-  ════════════════════════════════════════ -->
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>
   <script src="js/api.js"></script>
