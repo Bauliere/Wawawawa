@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Salidas Random</title>
-  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <title>Wawawa</title>
+  <link rel="icon" type="image/png" href="assets/favicon.jpeg" />
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/screens.css" />
   <link rel="stylesheet" href="css/animations.css" />
@@ -19,8 +19,8 @@
       <div class="login-logo">
         <img src="assets/fausto-icon.png" alt="Salidas Random" class="logo-img" />
       </div>
-      <h1 class="app-title">Salidas <span class="gold">Random</span></h1>
-      <p class="app-subtitle">¿A dónde vamos hoy?</p>
+      <h1 class="app-title">Pon tu nombre <span class="gold">aquí ✨</span></h1>
+      
       <div class="input-group">
         <label for="input-nombre" class="input-label">¿Quién eres?</label>
         <input type="text" id="input-nombre" class="glass-input"
@@ -58,19 +58,18 @@
     </div>
 
     <!-- ICONO GIRAR CORREGIDO: flecha circular limpia -->
+    <!-- Botón Girar: icono relámpago/rayo -->
     <button id="btn-girar" class="btn-primary btn-spin">
       <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
-        <path d="M1 4v6h6" stroke="#0a0800" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M3.51 15a9 9 0 1 0 .49-3.5L1 10"
-              stroke="#0a0800" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round"/>
+        <polygon points="13,2 4.5,13.5 11,13.5 11,22 19.5,10.5 13,10.5"
+                 fill="#0a0800" stroke="#0a0800" stroke-width="1"
+                 stroke-linejoin="round"/>
       </svg>
       <span class="btn-text">Girar</span>
       <span class="btn-loader hidden">Girando...</span>
     </button>
 
-    <button id="btn-ver-sellos" class="btn-ghost">
+    <button id="btn-ver-sellos" class="btn-ghost btn-sellos-compact">
       <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
               stroke="currentColor" stroke-width="1.5"/>
@@ -115,8 +114,7 @@
         <div class="sorpresa-particles"></div>
         <p class="sorpresa-label">Sorpresa</p>
         <h2 class="sorpresa-titulo">Algo especial</h2>
-        <p class="sorpresa-desc">El destino tiene algo muy especial para ti...</p>
-        <button id="btn-agendar-sorpresa" class="btn-primary btn-sorpresa">
+                <button id="btn-agendar-sorpresa" class="btn-primary btn-sorpresa">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="4" width="18" height="18" rx="2" stroke="#fff" stroke-width="2"/>
             <line x1="16" y1="2" x2="16" y2="6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
@@ -156,7 +154,7 @@
       <div class="hora-wrapper">
         <label for="select-hora" class="input-label">
           Hora tentativa
-          <span class="label-hint">(puede ajustarse)</span>
+          
         </label>
         <select id="select-hora" class="glass-select"></select>
       </div>
@@ -183,7 +181,7 @@
         </svg>
       </div>
       <h2 class="screen-title"><span class="gold">Listo</span></h2>
-      <p class="confirmacion-sub">Tu salida está agendada</p>
+      <p class="confirmacion-sub">Omgg bonita reserva</p>
       <div class="resumen-reserva">
         <div class="resumen-row">
           <span class="resumen-key">Plan</span>
@@ -235,19 +233,19 @@
       <div class="sellos-progreso">
         <span id="sellos-count" class="sellos-count">0</span>
         <span class="sellos-total">/ 15</span>
-        <p class="sellos-hint">Completa 15 sellos y gana un intento extra</p>
+        <p class="sellos-hint">Completa 15 sellos y gana un intento extra!</p>
       </div>
 
       <div id="sellos-grid" class="sellos-grid"></div>
 
       <div id="sellos-bonus-msg" class="bonus-msg hidden">
-        Completaste 15 sellos. Se agregó un intento extra.
+        Completaste 15 sellos!!!. Se agregó un intento extra.
       </div>
 
       <!-- INPUT DE MENSAJE OBLIGATORIO -->
       <div class="input-group" id="sello-mensaje-group">
         <label for="input-sello-mensaje" class="input-label">
-          ¿Cómo estuvo el día?
+          Escribe algo
           <span class="label-hint">(obligatorio)</span>
         </label>
         <input

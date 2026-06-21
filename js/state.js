@@ -40,17 +40,27 @@ function setState(key, value) {
 }
 
 // ═══════════════════════════════════════
+// HELPER: parseo seguro de enteros
+// Evita que fechas o NaN de Sheets corrompan el estado
+// ═══════════════════════════════════════
+
+function safeInt(val, fallback = 0) {
+  const n = parseInt(val, 10);
+  return (!isNaN(n) && isFinite(n) && n >= 0) ? n : fallback;
+}
+
+// ═══════════════════════════════════════
 // SETTERS SEMÁNTICOS
 // ═══════════════════════════════════════
 
 function setUserFromProgress(data) {
-  appState.nombreNorm    = data.nombreNorm    || "";
-  appState.nombre        = data.nombre        || "";
-  appState.spinsRestantes= Number(data.spinsRestantes) || 0;
-  appState.sellosHoy     = !!data.sellosHoy;
-  appState.stampsEnCiclo = Number(data.stampsEnCiclo)  || 0;
-  appState.totalStamps   = Number(data.totalStamps)    || 0;
-  appState.ultimoSello   = data.ultimoSello   || "";
+  appState.nombreNorm     = data.nombreNorm  || "";
+  appState.nombre         = data.nombre      || "";
+  appState.spinsRestantes = safeInt(data.spinsRestantes, 0);
+  appState.sellosHoy      = !!data.sellosHoy;
+  appState.stampsEnCiclo  = safeInt(data.stampsEnCiclo,  0);
+  appState.totalStamps    = safeInt(data.totalStamps,    0);
+  appState.ultimoSello    = data.ultimoSello || "";
 }
 
 function setSpinResult(resultado) {
@@ -58,13 +68,13 @@ function setSpinResult(resultado) {
 }
 
 function updateSpinsRestantes(n) {
-  appState.spinsRestantes = Number(n) || 0;
+  appState.spinsRestantes = safeInt(n, 0);
 }
 
 function updateStamps(stampsEnCiclo, totalStamps) {
-  appState.stampsEnCiclo = Number(stampsEnCiclo) || 0;
-  appState.totalStamps   = Number(totalStamps)   || 0;
-  appState.sellosHoy     = true; // marcar como sellado hoy
+  appState.stampsEnCiclo = safeInt(stampsEnCiclo, 0);
+  appState.totalStamps   = safeInt(totalStamps,   0);
+  appState.sellosHoy     = true;
 }
 
 function setBooking(fechaISO, fechaTexto, horaTexto) {
@@ -74,18 +84,18 @@ function setBooking(fechaISO, fechaTexto, horaTexto) {
 }
 
 function resetSession() {
-  appState.nombreNorm    = "";
-  appState.nombre        = "";
-  appState.resultado     = "";
-  appState.spinsRestantes= 0;
-  appState.fechaISO      = "";
-  appState.fechaTexto    = "";
-  appState.horaTexto     = "";
-  appState.sellosHoy     = false;
-  appState.stampsEnCiclo = 0;
-  appState.totalStamps   = 0;
-  appState.ultimoSello   = "";
-  appState.pantallaActual= "login";
+  appState.nombreNorm     = "";
+  appState.nombre         = "";
+  appState.resultado      = "";
+  appState.spinsRestantes = 0;
+  appState.fechaISO       = "";
+  appState.fechaTexto     = "";
+  appState.horaTexto      = "";
+  appState.sellosHoy      = false;
+  appState.stampsEnCiclo  = 0;
+  appState.totalStamps    = 0;
+  appState.ultimoSello    = "";
+  appState.pantallaActual = "login";
   // testMode NO se resetea — persiste durante toda la sesión
 }
 
@@ -94,7 +104,6 @@ function resetSession() {
 // ═══════════════════════════════════════
 
 function canSpin() {
-  // En modo pruebas siempre se puede girar
   if (appState.testMode) return true;
   return appState.spinsRestantes > 0;
 }
@@ -113,7 +122,6 @@ function isTestMode() {
 
 // ═══════════════════════════════════════
 // INICIALIZAR testMode desde URL
-// Se ejecuta una sola vez al cargar la página
 // ═══════════════════════════════════════
 
 (function initTestMode() {

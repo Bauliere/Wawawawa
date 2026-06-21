@@ -87,11 +87,22 @@
   height: auto;
 }
 
+/* Botón Girar: más alto (más padding vertical) */
 .btn-spin {
   max-width: 280px;
   margin: 0 auto var(--space-sm);
+  padding-top: 18px;    /* era 14px via .btn-primary */
+  padding-bottom: 18px;
 }
 
+/* Botón Sellos: más corto hacia los lados */
+.btn-sellos-compact {
+  max-width: 200px;
+  margin: 0 auto;
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+  width: auto;
+}
 /* ═══════════════════════════════════════
    RESULTADO
 ════════════════════════════════════════ */

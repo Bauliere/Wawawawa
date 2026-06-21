@@ -13,14 +13,13 @@ let isSpinning   = false;
 
 // ═══════════════════════════════════════
 // SEGMENTOS VISUALES — todos iguales
-// La probabilidad real vive en getWeightedResult(),
-// NO en el tamaño visual del sector.
+// La probabilidad real vive en getWeightedResult()
 // ═══════════════════════════════════════
 
 function buildSegments() {
   const count     = CONFIG.WHEEL_OPTIONS.length;
   const sliceSize = (Math.PI * 2) / count;
-  const START     = -Math.PI / 2; // 12 en punto
+  const START     = -Math.PI / 2;
 
   return CONFIG.WHEEL_OPTIONS.map((option, i) => {
     const startAngle = START + i * sliceSize;
@@ -32,7 +31,7 @@ function buildSegments() {
 const SEGMENTS = buildSegments();
 
 // ═══════════════════════════════════════
-// RESULTADO PONDERADO (independiente del visual)
+// RESULTADO PONDERADO
 // ═══════════════════════════════════════
 
 function getWeightedResult() {
@@ -46,7 +45,6 @@ function getWeightedResult() {
   return CONFIG.WHEEL_OPTIONS[0].label;
 }
 
-// Ángulo central del segmento visual de un label
 function getSegmentCenterAngle(label) {
   const seg = SEGMENTS.find(s => s.label === label);
   if (!seg) return 0;
@@ -54,20 +52,19 @@ function getSegmentCenterAngle(label) {
 }
 
 // ═══════════════════════════════════════
-// PALETA — plana y opaca
+// PALETA — dos colores alternados + morado para Sorpresa
 // ═══════════════════════════════════════
 
+// Color A: dorado oscuro / Color B: casi negro cálido
 const SEGMENT_FILLS = [
-  { fill: "#2a2318", stroke: "rgba(180,140,60,0.30)" },
-  { fill: "#22201a", stroke: "rgba(180,140,60,0.22)" },
-  { fill: "#261f10", stroke: "rgba(180,140,60,0.28)" },
-  { fill: "#1e1c14", stroke: "rgba(180,140,60,0.18)" },
+  { fill: "#2a1f0a", stroke: "rgba(201,168,76,0.55)" },  // A — dorado oscuro
+  { fill: "#111118", stroke: "rgba(201,168,76,0.30)" },  // B — negro azulado
 ];
 
 function getSegmentFill(index, seg) {
-  if (seg.special) return { fill: "#1a1030", stroke: "rgba(140,70,220,0.45)" };
-  if (seg.noCount) return { fill: "#1c1c24", stroke: "rgba(100,100,130,0.22)" };
-  return SEGMENT_FILLS[index % SEGMENT_FILLS.length];
+  if (seg.special) return { fill: "#1a0a2e", stroke: "rgba(168,85,247,0.70)" };
+  if (seg.noCount) return { fill: "#1a1a2a", stroke: "rgba(120,120,160,0.35)" };
+  return SEGMENT_FILLS[index % 2];
 }
 
 // ═══════════════════════════════════════
@@ -82,7 +79,6 @@ function drawWheel(rotation = 0) {
     const end   = seg.endAngle   + rotation;
     const color = getSegmentFill(idx, seg);
 
-    // Sector
     ctx.beginPath();
     ctx.moveTo(CX, CY);
     ctx.arc(CX, CY, RADIUS, start, end);
@@ -90,7 +86,7 @@ function drawWheel(rotation = 0) {
     ctx.fillStyle   = color.fill;
     ctx.fill();
     ctx.strokeStyle = color.stroke;
-    ctx.lineWidth   = 1;
+    ctx.lineWidth   = 1.5;
     ctx.stroke();
 
     drawSegmentLabel(seg, start, end);
@@ -110,24 +106,22 @@ function drawSegmentLabel(seg, start, end) {
   ctx.translate(tx, ty);
   ctx.rotate(midAngle + Math.PI / 2);
 
-  // Tamaño fijo porque todos los sectores son iguales
   const fontSize = 13;
-
   ctx.font         = `600 ${fontSize}px 'Segoe UI', system-ui, sans-serif`;
   ctx.textAlign    = "center";
   ctx.textBaseline = "middle";
 
   if (seg.special) {
-    ctx.fillStyle   = "#cc99ff";
-    ctx.shadowColor = "rgba(168,85,247,0.55)";
-    ctx.shadowBlur  = 8;
+    ctx.fillStyle   = "#e0bbff";
+    ctx.shadowColor = "rgba(168,85,247,0.7)";
+    ctx.shadowBlur  = 10;
   } else if (seg.noCount) {
-    ctx.fillStyle   = "#66667a";
+    ctx.fillStyle   = "#8888aa";
     ctx.shadowBlur  = 0;
   } else {
-    ctx.fillStyle   = "#c8a03c";
-    ctx.shadowColor = "rgba(190,150,50,0.35)";
-    ctx.shadowBlur  = 4;
+    ctx.fillStyle   = "#f0d070";
+    ctx.shadowColor = "rgba(240,200,80,0.5)";
+    ctx.shadowBlur  = 6;
   }
 
   const words = seg.label.split(" ");
@@ -144,7 +138,6 @@ function drawSegmentLabel(seg, start, end) {
   ctx.restore();
 }
 
-// Líneas divisorias entre sectores
 function drawDividers(rotation) {
   const count     = SEGMENTS.length;
   const sliceSize = (Math.PI * 2) / count;
@@ -153,15 +146,9 @@ function drawDividers(rotation) {
   for (let i = 0; i < count; i++) {
     const angle = START + i * sliceSize + rotation;
     ctx.beginPath();
-    ctx.moveTo(
-      CX + Math.cos(angle) * 18,
-      CY + Math.sin(angle) * 18
-    );
-    ctx.lineTo(
-      CX + Math.cos(angle) * RADIUS,
-      CY + Math.sin(angle) * RADIUS
-    );
-    ctx.strokeStyle = "rgba(180,140,60,0.22)";
+    ctx.moveTo(CX + Math.cos(angle) * 18, CY + Math.sin(angle) * 18);
+    ctx.lineTo(CX + Math.cos(angle) * RADIUS, CY + Math.sin(angle) * RADIUS);
+    ctx.strokeStyle = "rgba(201,168,76,0.25)";
     ctx.lineWidth   = 1;
     ctx.stroke();
   }
@@ -171,53 +158,58 @@ function drawCenter() {
   const r = 20;
 
   ctx.save();
-  ctx.shadowColor = "rgba(200,160,60,0.35)";
-  ctx.shadowBlur  = 12;
-
+  ctx.shadowColor = "rgba(200,160,60,0.4)";
+  ctx.shadowBlur  = 14;
   ctx.beginPath();
   ctx.arc(CX, CY, r, 0, Math.PI * 2);
-  ctx.fillStyle   = "#28200e";
+  ctx.fillStyle   = "#1a1408";
   ctx.fill();
-  ctx.strokeStyle = "rgba(200,160,60,0.45)";
+  ctx.strokeStyle = "rgba(200,160,60,0.55)";
   ctx.lineWidth   = 1.5;
   ctx.stroke();
-
   ctx.restore();
 
-  // Rombo central
   ctx.save();
-  ctx.fillStyle = "#c9a84c";
-  ctx.beginPath();
-  ctx.moveTo(CX,      CY - 10);
-  ctx.lineTo(CX + 8,  CY);
-  ctx.lineTo(CX,      CY + 10);
-  ctx.lineTo(CX - 8,  CY);
-  ctx.closePath();
-  ctx.fill();
+  ctx.fillStyle   = "#c9a84c";
+  ctx.shadowColor = "rgba(200,160,60,0.7)";
+  ctx.shadowBlur  = 10;
 
-  ctx.fillStyle = "#28200e";
+  const outerR = 10;
+  const innerR = 4;
+  const points = 4;
+
   ctx.beginPath();
-  ctx.moveTo(CX,      CY - 5);
-  ctx.lineTo(CX + 4,  CY);
-  ctx.lineTo(CX,      CY + 5);
-  ctx.lineTo(CX - 4,  CY);
+  for (let i = 0; i < points * 2; i++) {
+    const angle  = (i * Math.PI) / points - Math.PI / 2;
+    const radius = i % 2 === 0 ? outerR : innerR;
+    const px     = CX + Math.cos(angle) * radius;
+    const py     = CY + Math.sin(angle) * radius;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
   ctx.closePath();
   ctx.fill();
   ctx.restore();
 }
 
 // ═══════════════════════════════════════
-// EASING
+// EASING — arranca lento, acelera fuerte, frena suave
 // ═══════════════════════════════════════
 
-function easeOutCubic(t) {
-  return 1 - Math.pow(1 - t, 3);
-}
-
-function easeOutWithBounce(t) {
-  if (t < 0.88) return easeOutCubic(t / 0.88);
-  const over = (t - 0.88) / 0.12;
-  return 1 + Math.sin(over * Math.PI) * 0.012;
+function easeInOutSpin(t) {
+  // Fase 1 (0–0.25): aceleración cuártica — lento al inicio
+  if (t < 0.25) {
+    return 0.5 * Math.pow(t / 0.25, 4) * 0.25;
+  }
+  // Fase 2 (0.25–0.70): velocidad máxima — casi lineal
+  if (t < 0.70) {
+    const tNorm = (t - 0.25) / 0.45;
+    return 0.125 + tNorm * 0.55;
+  }
+  // Fase 3 (0.70–1.0): desaceleración cúbica suave con micro-bounce
+  const tNorm = (t - 0.70) / 0.30;
+  const ease  = 1 - Math.pow(1 - tNorm, 3);
+  const bounce = Math.sin(tNorm * Math.PI) * 0.008;
+  return 0.675 + ease * 0.325 + bounce;
 }
 
 // ═══════════════════════════════════════
@@ -233,25 +225,21 @@ function spinWheel(callback) {
   const resultado   = getWeightedResult();
   const centerAngle = getSegmentCenterAngle(resultado);
 
-  // El puntero apunta a -π/2 (arriba)
-  // Queremos que centerAngle del resultado quede ahí
-  // rotation_final = -π/2 - centerAngle
   const targetRotation = -Math.PI / 2 - centerAngle;
-
-  const extraSpins = (7 + Math.floor(Math.random() * 4)) * Math.PI * 2;
-  let   delta      = ((targetRotation - currentAngle) % (Math.PI * 2));
+  const extraSpins     = (8 + Math.floor(Math.random() * 5)) * Math.PI * 2;
+  let   delta          = ((targetRotation - currentAngle) % (Math.PI * 2));
   if (delta <= 0) delta += Math.PI * 2;
   delta += extraSpins;
 
   const startAngle  = currentAngle;
-  const DURATION_MS = 4800 + Math.random() * 1000;
+  const DURATION_MS = 5500 + Math.random() * 1000;
   let   startTime   = null;
 
   function animate(timestamp) {
     if (!startTime) startTime = timestamp;
     const elapsed  = timestamp - startTime;
     const progress = Math.min(elapsed / DURATION_MS, 1);
-    const eased    = easeOutWithBounce(progress);
+    const eased    = easeInOutSpin(progress);
 
     currentAngle = startAngle + delta * eased;
     drawWheel(currentAngle);

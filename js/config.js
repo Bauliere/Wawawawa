@@ -31,7 +31,7 @@ const CONFIG = {
   NO_COUNT_RESULTS: ["Otro intento"],
   INVALID_BOOKING_RESULTS: ["Otro intento"],
 
-  API_URL: "https://script.google.com/macros/s/AKfycbyUjR1phsG233CCG8hmUvMLt9Glq2MepL6_anqvHHe3cUsgY3JG9lqQUAbI0dPzhJc/exec",
+  API_URL: "https://script.google.com/macros/s/AKfycbypBF5w6B0ZHC6SyBRDkoL1j4PWFPOYRPvUGvJgHTShwQQoFrbnmnuCvFC5zvBeNVpu/exec",
 
   // Fechas del calendario
   MIN_SELECTABLE_DATE: "2026-07-08",

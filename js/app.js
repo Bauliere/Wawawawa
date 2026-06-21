@@ -147,7 +147,7 @@ function setLoading(btn, loading) {
 function updateSpinsUI() {
   const n = appState.spinsRestantes;
   ui.spinsRestantes.textContent = n;
-  ui.btnGirar.disabled = n <= 0;
+  ui.btnGirar.disabled = n <= 0 && !isTestMode();
   const label = document.querySelector(".spins-label");
   if (label) label.textContent = n === 1 ? " intento restante" : " intentos restantes";
 }
@@ -188,6 +188,15 @@ async function onEntrar() {
       return;
     }
 
+    const spins = parseInt(data.spinsRestantes, 10);
+    data.spinsRestantes = isNaN(spins) || spins < 0 ? CONFIG.BASE_SPINS : spins;
+
+    const stampsEnCiclo = parseInt(data.stampsEnCiclo, 10);
+    data.stampsEnCiclo = isNaN(stampsEnCiclo) || stampsEnCiclo < 0 ? 0 : stampsEnCiclo;
+
+    const totalStamps = parseInt(data.totalStamps, 10);
+    data.totalStamps = isNaN(totalStamps) || totalStamps < 0 ? 0 : totalStamps;
+
     setUserFromProgress(data);
     ui.saludoNombre.innerHTML = `Hola, <span>${data.nombre}</span>`;
     updateSpinsUI();
@@ -209,9 +218,18 @@ function onSpinComplete(resultado) {
   setSpinResult(resultado);
   showModalResultado(resultado);
 
+  const esOtroIntento = CONFIG.NO_COUNT_RESULTS.includes(resultado);
+
   apiRegisterSpin(resultado)
     .then(res => {
-      updateSpinsRestantes(res.spinsRestantes);
+      const spinsDelBackend = parseInt(res.spinsRestantes, 10);
+      if (esOtroIntento) {
+        // "Otro intento" no consume spin — restaurar a lo que había o al menos 1
+        const actuales = appState.spinsRestantes;
+        updateSpinsRestantes(actuales > 0 ? actuales : 1);
+      } else {
+        updateSpinsRestantes(isNaN(spinsDelBackend) ? 0 : spinsDelBackend);
+      }
       updateSpinsUI();
     })
     .catch(err => console.error("[RegisterSpin]", err));
@@ -326,7 +344,7 @@ async function onConfirmarReserva() {
 }
 
 // ═══════════════════════════════════════
-// SELLOS — lógica corregida
+// SELLOS
 // ═══════════════════════════════════════
 
 function openSellos(origen) {
@@ -338,24 +356,29 @@ function openSellos(origen) {
 async function onSellarHoy() {
   clearError(ui.sellosError);
 
-  // ── CORRECCIÓN: validar estado local ANTES de llamar al backend ──
-  // Esto evita que el primer render permita múltiples sellos
-  // porque appState.sellosHoy ya debe reflejar el estado real.
-  if (appState.sellosHoy) {
+  if (appState.sellosHoy && !isTestMode()) {
     showError(ui.sellosError, "Ya sellaste hoy. Vuelve mañana.");
-    renderStamps(); // refrescar UI por si acaso
+    renderStamps();
+    return;
+  }
+
+  const inputMsg = document.getElementById("input-sello-mensaje");
+  const mensaje  = inputMsg ? inputMsg.value.trim() : "";
+
+  if (!mensaje) {
+    showError(ui.sellosError, "Escribe algo bonito antes de sellar.");
+    if (inputMsg) inputMsg.focus();
     return;
   }
 
   setLoading(ui.btnSellarHoy, true);
 
   try {
-    const data = await apiSaveStamp();
+    const data = await apiSaveStamp(mensaje);
 
     if (!data.ok) {
-      // El backend confirma que ya selló: sincronizar estado local
       if (data.razon === "ya_sellado") {
-        setState("sellosHoy", true); // ← forzar estado local en sync
+        setState("sellosHoy", true);
         showError(ui.sellosError, "Ya sellaste hoy. Vuelve mañana.");
         renderStamps();
       } else {
@@ -364,12 +387,10 @@ async function onSellarHoy() {
       return;
     }
 
-    // Éxito: actualizar estado y marcar que ya selló hoy
     updateStamps(
       data.stampsEnCiclo,
       data.totalStamps ?? appState.totalStamps + 1
     );
-    // updateStamps ya pone sellosHoy = true internamente en state.js
 
     if (data.bonusSpinEarned) {
       ui.bonusMsg.classList.remove("hidden");

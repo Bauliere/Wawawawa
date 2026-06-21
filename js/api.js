@@ -5,7 +5,7 @@
 async function fetchWithRetry(url, options = {}, retries = 2) {
   for (let i = 0; i <= retries; i++) {
     try {
-      const res = await fetch(url, options);
+      const res  = await fetch(url, options);
       const json = await res.json();
       return json;
     } catch (err) {
